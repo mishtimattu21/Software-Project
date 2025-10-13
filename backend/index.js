@@ -12,6 +12,7 @@ const { initializeSupabase } = require('./config/supabase');
 const { initializeGemini } = require('./config/gemini');
 const chatbotRoutes = require('./routes/chatbot');
 const detectImageRoutes = require('./routes/detectImage');
+const speechProxyRoutes = require('./routes/speech');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -43,6 +44,7 @@ initializeGemini();
 // Routes
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/detect-image', detectImageRoutes);
+app.use('/api/speech', speechProxyRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

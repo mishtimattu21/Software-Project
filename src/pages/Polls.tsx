@@ -29,6 +29,68 @@ const Polls = () => {
   const activePolls = filteredPolls.filter((poll) => poll.status === 'active');
   const endedPolls = filteredPolls.filter((poll) => poll.status === 'ended');
 
+  const seedSamplePolls = async () => {
+    try {
+      const samples = [
+        {
+          question: 'Should the city prioritize fixing potholes on main roads this month?',
+          location: 'Kochi North',
+          status: 'active',
+          created_at: new Date().toISOString()
+        },
+        {
+          question: 'Do you support adding more street lights in poorly lit areas?',
+          location: 'Fort Kochi',
+          status: 'active',
+          created_at: new Date().toISOString()
+        },
+        {
+          question: 'Should plastic waste segregation be made mandatory in all wards?',
+          location: 'Edappally',
+          status: 'active',
+          created_at: new Date().toISOString()
+        },
+        {
+          question: 'Would you volunteer for monthly beach clean‑up drives?',
+          location: 'Cherai Beach',
+          status: 'active',
+          created_at: new Date().toISOString()
+        },
+        {
+          question: 'Should the city plant 1000 new trees this monsoon?',
+          location: 'Panampilly Nagar',
+          status: 'active',
+          created_at: new Date().toISOString()
+        }
+      ];
+      const { error } = await supabase.from('polls').insert(samples);
+      if (error) throw error;
+      const { data } = await supabase
+        .from('polls')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data) setPolls(data);
+      toast({ title: 'Sample polls added', description: 'New active polls are now available.' });
+    } catch (e) {
+      toast({ title: 'Failed to add polls', description: 'Please check permissions.' });
+    }
+  };
+
+  // Auto-seed if there are no active polls (one-time per browser)
+  useEffect(() => {
+    const maybeSeed = async () => {
+      try {
+        const seeded = localStorage.getItem('civi_seeded_polls');
+        const actives = polls.filter(p => p.status === 'active');
+        if ((actives.length === 0) && seeded !== 'true') {
+          await seedSamplePolls();
+          localStorage.setItem('civi_seeded_polls', 'true');
+        }
+      } catch {}
+    };
+    if (polls) maybeSeed();
+  }, [polls]);
+
   // Fetch user
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -178,6 +240,20 @@ const Polls = () => {
 
   // Fetch poll results for ended polls
   const [results, setResults] = useState<{ [pollId: string]: { [option: string]: number } }>({});
+  const formatCount = (n: number) => {
+    if (!Number.isFinite(n)) return '0';
+    try {
+      return new Intl.NumberFormat(undefined, {
+        notation: 'compact',
+        maximumFractionDigits: 1
+      }).format(n);
+    } catch {
+      // Fallback
+      if (n >= 1_000_000) return `${Math.round(n / 100_000) / 10}M`;
+      if (n >= 1_000) return `${Math.round(n / 100) / 10}K`;
+      return String(n);
+    }
+  };
   useEffect(() => {
     const fetchResults = async () => {
       const endedPolls = polls.filter((poll) => poll.status === 'ended');
@@ -327,6 +403,11 @@ const Polls = () => {
                 <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
                 <span className="font-medium">{endedPolls.length} Ended</span>
               </div>
+              {activePolls.length < 5 && (
+                <Button onClick={seedSamplePolls} className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700">
+                  Add Sample Polls
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>
@@ -510,6 +591,8 @@ const Polls = () => {
           {endedPolls.map((poll, index) => {
             const pollResults = results[poll.id] || {};
             const totalVotes = Object.values(pollResults).reduce((a, b) => a + b, 0);
+            const userChoice = votes[poll.id];
+            const userOtherText = (otherResponses[poll.id] || []).find((v: any) => v.user_id === user?.id)?.other_text;
             const hasOtherResponses = otherResponses[poll.id] && otherResponses[poll.id].length > 0;
             return (
               <Card 
@@ -537,7 +620,15 @@ const Polls = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="font-bold text-slate-900 dark:text-white mb-4 text-lg">{poll.question}</div>
+                  <div className="font-bold text-slate-900 dark:text-white mb-2 text-lg">{poll.question}</div>
+                  {userChoice && (
+                    <div className="mb-3 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-lg inline-block">
+                      Your vote: <span className="font-semibold">{userChoice}</span>
+                      {userChoice === 'Other' && userOtherText ? (
+                        <span className="ml-2 text-slate-700 dark:text-slate-300">— {userOtherText}</span>
+                      ) : null}
+                    </div>
+                  )}
                   <div className="space-y-3 mb-4">
                     {["Yes", "No", "Other"].map((option) => (
                       <div key={option} className="flex items-center gap-3">
@@ -550,14 +641,14 @@ const Polls = () => {
                             style={{ width: `${((pollResults[option] || 0) / (totalVotes || 1)) * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm text-slate-700 dark:text-slate-300 font-medium min-w-[60px] text-right">
-                          {pollResults[option] || 0} votes
+                        <span className="text-sm text-slate-700 dark:text-slate-300 font-medium min-w-[80px] text-right">
+                          {formatCount(pollResults[option] || 0)} votes
                         </span>
                       </div>
                     ))}
                   </div>
                   <div className="text-sm text-slate-600 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800/50 px-4 py-2 rounded-lg text-center">
-                    Total votes: {totalVotes}
+                    Total votes: {formatCount(totalVotes)}
                   </div>
                 </CardContent>
                 {showOtherResponses[poll.id] && hasOtherResponses && (
