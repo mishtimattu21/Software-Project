@@ -136,6 +136,7 @@ const HomePage = () => {
   }, []);
 
   // Handle image file selection
+  // [TC_CVX_014] Image upload should trigger authenticity detection and reflect UI state
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -144,6 +145,7 @@ const HomePage = () => {
       const formData = new FormData();
       formData.append('image', file);
       try {
+        // [TC_CVX_004] Call backend detection API
         const response = await fetch('http://localhost:4000/api/detect-image', {
           method: 'POST',
           body: formData
@@ -213,6 +215,7 @@ const HomePage = () => {
   };
 
   // Handle new post submission
+  // [TC_CVX_017] Validation blocks empty inputs; [TC_CVX_014] Successful submit shows toast and updates feed
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setUploading(true);

@@ -15,6 +15,7 @@ import RedeemPoints from "./pages/RedeemPoints";
 import Heatmaps from "./pages/Heatmaps";
 import Badges from "./pages/Badges";
 import Documents from "./pages/Documents";
+import Testing from "./pages/Testing";
 import NotFound from "./pages/NotFound";
 import Polls from "./pages/Polls";
 
@@ -39,6 +40,8 @@ const App = () => (
                   <Route path="badges" element={<Badges />} />
                   <Route path="documents" element={<Documents />} />
                   <Route path="polls" element={<Polls />} />
+                  {/* Test Harness Page */}
+                  <Route path="testing" element={<Testing />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

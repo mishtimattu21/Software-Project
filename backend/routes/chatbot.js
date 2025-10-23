@@ -142,12 +142,13 @@ const getChatHistory = async (userId, limit = 10) => {
   }
 };
 
-// Main chatbot endpoint
+// [TC_CVX_001] [TC_CVX_002] [TC_CVX_003] Main chatbot endpoint and validations
 router.post('/chat', async (req, res) => {
   try {
     const { message, userId } = req.body;
 
     if (!message) {
+      // [TC_CVX_002] Expect 400 on empty message
       return res.status(400).json({ error: 'Message is required' });
     }
 
@@ -169,6 +170,7 @@ router.post('/chat', async (req, res) => {
     }
 
     // Generate AI response with context
+    // [TC_CVX_001] Generate a response when env is correctly configured
     const aiResponse = await generateResponse(message, fullContext);
 
     // Log the interaction (optional)
@@ -200,6 +202,7 @@ router.post('/chat', async (req, res) => {
 
   } catch (error) {
     console.error('Chatbot error:', error);
+    // [TC_CVX_003] Return safe 500 without leaking secrets if provider/env fails
     res.status(500).json({ 
       error: 'Failed to process chat request',
       message: error.message 
@@ -207,7 +210,7 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// Get posts by location
+// [TC_CVX_007] Get posts by location
 router.get('/posts/location/:location', async (req, res) => {
   try {
     const { location } = req.params;
@@ -224,7 +227,7 @@ router.get('/posts/location/:location', async (req, res) => {
   }
 });
 
-// Get posts by category
+// [TC_CVX_008] Get posts by category
 router.get('/posts/category/:category', async (req, res) => {
   try {
     const { category } = req.params;
@@ -241,7 +244,7 @@ router.get('/posts/category/:category', async (req, res) => {
   }
 });
 
-// Get recent posts summary
+// [TC_CVX_009] Get recent posts summary
 router.get('/posts/summary', async (req, res) => {
   try {
     const postsContext = await getPostsContext();

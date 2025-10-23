@@ -30,6 +30,8 @@ const Sidebar = ({ collapsed, setSidebarCollapsed }: SidebarProps) => {
     { icon: Award, label: "Badges & Achievements", path: "/platform/badges" },
     { icon: FileText, label: "Documents", path: "/platform/documents" },
     { icon: [BarChart2], label: "Polls", path: "/platform/polls" },
+    // Test harness menu item
+    { icon: FileText, label: "Testing", path: "/platform/testing" },
   ];
 
   const isActive = (path: string) => {
