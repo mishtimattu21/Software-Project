@@ -26,8 +26,44 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { usePoints } from "@/contexts/PointsContext";
 
+interface Post {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  severity: number;
+  location: string;
+  created_at: string;
+  upvotes: number;
+  downvotes: number;
+  image_url?: string;
+}
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  points: number;
+  badges: string[];
+}
+
+interface Story {
+  id: number;
+  title: string;
+  location: string;
+  image: string | null;
+  timestamp: string;
+}
+
+interface Comment {
+  id: number;
+  content: string;
+  author: string;
+  timestamp: string;
+}
+
 const HomePage = () => {
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
   const stories = [
@@ -165,7 +201,7 @@ const HomePage = () => {
     }
   };
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [newUsername, setNewUsername] = useState('');
@@ -396,8 +432,8 @@ const HomePage = () => {
       .slice(0, 5);
   }, [posts]);
 
-  const [selectedStory, setSelectedStory] = useState<any | null>(null);
-  const [comments, setComments] = useState<{ [postId: string]: any[] }>({});
+  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
+  const [comments, setComments] = useState<{ [postId: string]: Comment[] }>({});
   const [newComment, setNewComment] = useState<{ [postId: string]: string }>({});
   const [expandedComments, setExpandedComments] = useState<{ [postId: string]: boolean }>({});
   const [commentCounts, setCommentCounts] = useState<{ [postId: string]: number }>({});

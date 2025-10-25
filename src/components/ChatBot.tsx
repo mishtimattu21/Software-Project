@@ -33,10 +33,10 @@ const ChatBot = () => {
   const [recordingStart, setRecordingStart] = useState<number | null>(null);
   const [recordingElapsedMs, setRecordingElapsedMs] = useState<number>(0);
   const [recordingTimerId, setRecordingTimerId] = useState<number | null>(null);
-  const mediaRecorderRef = useState<MediaRecorder | null>(null)[0] as any;
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [currentStream, setCurrentStream] = useState<MediaStream | null>(null);
-  const recordedChunksRef = useState<Blob[]>([])[0] as any;
+  const recordedChunksRef = useRef<Blob[]>([]);
   const [voicePreview, setVoicePreview] = useState<{ blob: Blob; url: string; durationSec: number } | null>(null);
   const [playingMessageId, setPlayingMessageId] = useState<number | null>(null);
 
@@ -59,7 +59,9 @@ const ChatBot = () => {
             if (audio.seekable && audio.seekable.length > 0) {
               d = audio.seekable.end(audio.seekable.length - 1);
             }
-          } catch {}
+          } catch (error) {
+            console.warn('Error getting audio duration:', error);
+          }
         }
         if (!isFinite(d) || isNaN(d) || d < 0) d = 0;
         setDuration(d);
@@ -74,7 +76,9 @@ const ChatBot = () => {
       audio.addEventListener('ended', onEnd);
       audio.addEventListener('pause', () => setIsPlaying(false));
       return () => {
-        try { audio.pause(); } catch {}
+        try { audio.pause(); } catch (error) {
+          console.warn('Error pausing audio:', error);
+        }
         audio.removeEventListener('loadedmetadata', onLoaded);
         audio.removeEventListener('durationchange', onDurationChange);
         audio.removeEventListener('timeupdate', onTime);
@@ -319,7 +323,9 @@ const ChatBot = () => {
                   if (tempAudio.seekable && tempAudio.seekable.length > 0) {
                     d = tempAudio.seekable.end(tempAudio.seekable.length - 1);
                   }
-                } catch {}
+                } catch (error) {
+                  console.warn('Error getting temp audio duration:', error);
+                }
               }
               resolve(isFinite(d) && !isNaN(d) ? d : 0);
             };
@@ -374,7 +380,9 @@ const ChatBot = () => {
   const cancelVoicePreview = () => {
     try {
       if (voicePreview?.url) URL.revokeObjectURL(voicePreview.url);
-    } catch {}
+    } catch (error) {
+      console.warn('Error revoking object URL:', error);
+    }
     setVoicePreview(null);
     setRecordedLanguage(null);
   };
